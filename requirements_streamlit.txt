@@ -1,0 +1,5 @@
+streamlit
+extra-streamlit-components
+python-dotenv
+requests
+psutil

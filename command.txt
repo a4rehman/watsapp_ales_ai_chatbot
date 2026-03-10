@@ -1,0 +1,2 @@
+live=ssh -o StrictHostKeyChecking=no -R 80:localhost:5000 serveo.net
+local=node index.js

@@ -4,16 +4,17 @@ const qrcode = require('qrcode');
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
-const session = require('express-session'); // Add session support
+const session = require('express-session');
 const path = require('path');
 const port = process.env.PORT || 5000;
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const ACCESS_CODE = process.env.ACCESS_CODE || "123456"; // Default code if not in .env
 
 app.use(express.urlencoded({ extended: true }));
@@ -192,18 +193,14 @@ client.on('message', async (msg) => {
     io.emit('message', 'Processing: ' + msg.body);
 
     try {
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-                {
-                    role: "system",
-                    content: "You are an expert Car Sales & Service Assistant for a premium Car Showroom. Your goal is to guide customers on car buying and service. Reply in English or Hindi (Roman OK). Keep it concise. Built by Abdul Rehman."
-                },
-                { role: "user", content: msg.body }
-            ]
-        });
+        const prompt = `System: You are an expert Car Sales & Service Assistant for a premium Car Showroom. Your goal is to guide customers on car buying and service. Reply in English or Hindi (Roman OK). Keep it concise. Built by Abdul Rehman.
+        
+        User: ${msg.body}`;
 
-        const reply = response.choices[0].message.content;
+        const result = await aiModel.generateContent(prompt);
+        const response = await result.response;
+        const reply = response.text();
+
         msg.reply(reply);
         console.log('AI Reply:', reply);
     } catch (error) {

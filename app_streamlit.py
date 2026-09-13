@@ -2,9 +2,10 @@ import streamlit as st
 import subprocess
 import os
 import time
-import socket
 import signal
 from dotenv import load_dotenv, set_key
+
+from dashboard_utils import mask_api_key, is_port_in_use
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -142,10 +143,6 @@ def stop_bot():
         except Exception as e:
             st.error(f"Error stopping bot: {e}")
 
-def is_port_in_use(port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', port)) == 0
-
 # --- Dashboard UI ---
 st.markdown("<h1 class='premium-header'>CAR SHOWROOM AI <span style='font-size: 1.2rem; vertical-align: middle; background: #25d366; color: #0b141a; padding: 4px 10px; border-radius: 5px; -webkit-text-fill-color: #0b141a;'>PRO</span></h1>", unsafe_allow_html=True)
 
@@ -172,7 +169,7 @@ with col_sidebar:
     
     with st.expander("⚙️ Provider Settings"):
         current_key = os.getenv("GEMINI_API_KEY", "")
-        masked_key = f"{current_key[:6]}...{current_key[-4:]}" if current_key and len(current_key) > 10 else "None"
+        masked_key = mask_api_key(current_key)
         st.info(f"Active Provider: **Google Gemini**")
         st.caption(f"API Key: `{masked_key}`")
         
